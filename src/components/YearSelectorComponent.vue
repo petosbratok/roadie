@@ -13,7 +13,7 @@
                 :class="{ active: index === middleIndex }"
                 v-for="(year, index) in years"
                 :key="year"
-                @click="selectYear(year)"
+                @click="selectYear(index)"
             >
                 {{ year }}
             </div>
@@ -21,7 +21,7 @@
     </div>
 </template>
   
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue';
 
     var animationOn = ref(false);
@@ -29,20 +29,22 @@
     const offsetStep = -79.6;    
     const years = ref(["All"]);
     for (let year = new Date().getFullYear(); year >= endYear; year--) {
-        years.value.push(year);
+        years.value.push(year.toString());
     }
 
     const middleIndex = ref(0);
-    const offsetLeft = ref(0);
+    const offsetLeft = ref("0");
 
-    function selectYear(selectedYear) {
+    function selectYear(index) {
+        console.log("HI");
+        console.log(index);
         animationOn.value = true;
-        const index = years.value.indexOf(selectedYear);
         middleIndex.value = index;
         offsetLeft.value = `calc(${(index) * offsetStep}px)`;
-
+        console.log(offsetLeft.value)
         setTimeout(() => {
             animationOn.value = false;
+            console.log(offsetLeft.value)            
         }, 300);
     }
 
@@ -57,28 +59,28 @@
     }
 
     function onTouchStart(event) {
-        isTouching.value = true;
+        if (animationOn.value) return;
         touchStartX.value = event.touches[0].clientX;
         touchCurrentX.value = touchStartX.value;
         touchStartOffset.value = extractNumericValue(offsetLeft.value);
     }
 
     function onTouchMove(event) {
-        if (!isTouching.value) return;
+        isTouching.value = true;
 
         touchCurrentX.value = event.touches[0].clientX;
         const deltaX = touchCurrentX.value - touchStartX.value;
         let newOffset = touchStartOffset.value + deltaX;
         newOffset = Math.max(
-            offsetStep * (years.value.length - 1), 
+            offsetStep * (years.value.length - 1) - 16, 
             newOffset
         );
-        newOffset = Math.min(0, newOffset);
+        newOffset = Math.min(16, newOffset);
         offsetLeft.value = `calc(${newOffset}px)`;
 
         const middlePos = window.innerWidth / 2;
         let minDistance = 9999;
-        let closestYearIndex = -1;
+        let closestYearIndex = 0;
         years.value.forEach((_, index) => {
             const sliderItemPos = index * offsetStep + middlePos - newOffset;
             const distance = Math.abs(sliderItemPos - middlePos);
@@ -93,11 +95,14 @@
     }
 
     function onTouchEnd() {
+        if (isTouching.value) {
+            selectYear(middleIndex.value)
+        }
         isTouching.value = false;
     }
 </script>
   
-<script>
+<script lang="ts">
     export default {
     name: 'YearSelectorComponent'
     }

@@ -3,7 +3,7 @@
   <YearSelectorComponent></YearSelectorComponent>
 </template>
 
-<script>
+<script lang="ts">
 import PanelComponent from './components/PanelComponent.vue'
 import YearSelectorComponent from './components/YearSelectorComponent.vue'
 

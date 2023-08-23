@@ -5,12 +5,12 @@
         </div> -->
         <div class="cell distance">
             <span class="value">1200</span>
-            <span class="regular">км</span>
+            <span class="regular">km</span>
         </div>
         <div class="cell speed">
             <div>
                 <span class="value">31.1</span>
-                <span class="regular">км/ч</span>
+                <span class="regular">km/h</span>
             </div>
             <div>
                 <span>avg speed</span>
@@ -32,7 +32,7 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
     // import GeneralStatsComponent from './GeneralStatsComponent.vue'
     import SportsSelectorComponent from './SportsSelectorComponent.vue'
 
