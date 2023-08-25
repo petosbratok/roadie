@@ -23,90 +23,96 @@
         </div>
     </div>
 </template>
-  
-<script setup >
-    import { ref } from 'vue';
 
-    var animationOn = ref(false);
+<script>
+import { ref, onMounted } from 'vue';
+
+export default {
+  emits: ['middle-index-changed'],
+  name: 'YearSelectorComponent',
+  data() {
+    return {
+      animationOn: false,
+      offsetStep: -79.6,
+      offsetLeft: '-79.6px',
+      isTouching: false,
+      touchStartX: 0,
+      touchCurrentX: 0,
+      touchStartOffset: 0,
+      middleIndex: 1
+    };
+  },
+  setup() {
     const endYear = 2019;
-    const offsetStep = -79.6;    
-    const years = ref(["All"]);
-    for (let year = new Date().getFullYear(); year >= endYear; year--) {
+    const years = ref(['All']);
+    onMounted(() => {
+      const currentYear = new Date().getFullYear();
+      for (let year = currentYear; year >= endYear; year--) {
         years.value.push(year.toString());
+      }
+    })
+
+    return {
+        years,
+        endYear
     }
-
-    const middleIndex = ref(0);
-    const offsetLeft = ref("0");
-
-    function selectYear(index) {
-        animationOn.value = true;
-        middleIndex.value = index;
-        offsetLeft.value = `calc(${(index) * offsetStep}px)`;
-        // console.log(offsetLeft.value)
+  },
+  methods: {
+    selectYear(index) {
+        this.animationOn = true;
+        this.middleIndex = index;
+        this.offsetLeft = `calc(${index * this.offsetStep}px)`;
+        this.$emit('middle-index-changed', this.years[index]);
         setTimeout(() => {
-            animationOn.value = false;
-            // console.log(offsetLeft.value)            
-        },   300);
-    }
+            this.animationOn = false;
+        }, 300);
+    },
+    onTouchStart(event) {
+      if (this.animationOn) return;
+      this.touchStartX = event.touches[0].clientX;
+      this.touchCurrentX = this.touchStartX;
+      this.touchStartOffset = this.extractNumericValue(this.offsetLeft);
+    },
+    onTouchMove(event) {
+      this.isTouching = true;
 
-    let isTouching = ref(false);
-    let touchStartX = ref(0);
-    let touchCurrentX = ref(0);
-    let touchStartOffset = ref(0);
+      this.touchCurrentX = event.touches[0].clientX;
+      const deltaX = this.touchCurrentX - this.touchStartX;
+      let newOffset = this.touchStartOffset + deltaX;
+      newOffset = Math.max(
+        this.offsetStep * (this.years.length - 1) - 16,
+        newOffset
+      );
+      newOffset = Math.min(16, newOffset);
+      this.offsetLeft = `calc(${newOffset}px)`;
 
-    function extractNumericValue(str) {
-        const match = /([+-]?\d+(\.\d+)?)px/.exec(str);
-        return match ? parseFloat(match[1]) : 0;
-    }
+      const middlePos = window.innerWidth / 2;
+      let minDistance = 9999;
+      let closestYearIndex = 0;
+      this.years.forEach((_, index) => {
+        const sliderItemPos = index * this.offsetStep + middlePos - newOffset;
+        const distance = Math.abs(sliderItemPos - middlePos);
 
-    function onTouchStart(event) {
-        if (animationOn.value) return;
-        touchStartX.value = event.touches[0].clientX;
-        touchCurrentX.value = touchStartX.value;
-        touchStartOffset.value = extractNumericValue(offsetLeft.value);
-    }
-
-    function onTouchMove(event) {
-        isTouching.value = true;
-
-        touchCurrentX.value = event.touches[0].clientX;
-        const deltaX = touchCurrentX.value - touchStartX.value;
-        let newOffset = touchStartOffset.value + deltaX;
-        newOffset = Math.max(
-            offsetStep * (years.value.length - 1) - 16, 
-            newOffset
-        );
-        newOffset = Math.min(16, newOffset);
-        offsetLeft.value = `calc(${newOffset}px)`;
-
-        const middlePos = window.innerWidth / 2;
-        let minDistance = 9999;
-        let closestYearIndex = 0;
-        years.value.forEach((_, index) => {
-            const sliderItemPos = index * offsetStep + middlePos - newOffset;
-            const distance = Math.abs(sliderItemPos - middlePos);
-
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestYearIndex = index;
-            }
-        });
-
-        middleIndex.value = closestYearIndex;
-    }
-
-    function onTouchEnd() {
-        if (isTouching.value) {
-            selectYear(middleIndex.value)
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestYearIndex = index;
         }
-        isTouching.value = false;
+      });
+
+      this.middleIndex = closestYearIndex;
+    },
+    onTouchEnd() {
+      if (this.isTouching) {
+        this.selectYear(this.middleIndex);
+      }
+      this.isTouching = false;
+    },
+    extractNumericValue(str) {
+      const match = /([+-]?\d+(\.\d+)?)px/.exec(str);
+      return match ? parseFloat(match[1]) : 0;
     }
-</script>
-  
-<script >
-    export default {
-    name: 'YearSelectorComponent'
-    }
+  }
+};
 </script>
 
 <style scoped>

@@ -1,6 +1,11 @@
 <template>
-  <PanelComponent></PanelComponent>
-  <YearSelectorComponent></YearSelectorComponent>
+  <!-- TO DO RENAME TO YEAR!!!!!!!!!!!!!!!!!!!!!!!! -->
+  <PanelComponent 
+    :middleIndex="middleIndex"
+  ></PanelComponent>
+  <YearSelectorComponent 
+    @middle-index-changed="onChangeIndex"
+  ></YearSelectorComponent>
 </template>
 
 <script >
@@ -12,6 +17,16 @@ export default {
   components: {
     PanelComponent,
     YearSelectorComponent,
+  },
+  data() {
+    return {
+      middleIndex: new Date().getFullYear()
+    }
+  },
+  methods: {
+    onChangeIndex(index) {
+      this.middleIndex = index;
+    }
   }
 }
 </script>

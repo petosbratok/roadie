@@ -5,7 +5,7 @@
             class="value"
             v-if="resultReady"
           >
-            {{ result[selectedYear][selectedType].totalDistance.toFixed(1) }}
+            {{ result[middleIndex][selectedType].totalDistance.toFixed(1) }}
           </span>
           <span v-else class="value">-</span>
           <span class="regular">km</span>
@@ -14,8 +14,8 @@
             <div>
                 <span class="value" v-if="resultReady">
                   {{(
-                    result[selectedYear][selectedType].totalDistance /
-                    result[selectedYear][selectedType].totalHours
+                    result[middleIndex][selectedType].totalDistance /
+                    result[middleIndex][selectedType].totalHours
                   ).toFixed(1)}}
                 </span>
                 <span v-else class="value">-</span>
@@ -31,7 +31,7 @@
         <div class="cell time">
             <span class="value" v-if="resultReady">
               {{ 
-                result[selectedYear][selectedType].totalHours.toFixed(1) 
+                result[middleIndex][selectedType].totalHours.toFixed(1) 
               }}
             </span>
             <span v-else class="value">-</span>
@@ -40,11 +40,11 @@
         <div class="cell session-count">
           <span class="value" v-if="resultReady">
               {{ 
-                result[selectedYear][selectedType].totalSessions 
+                result[middleIndex][selectedType].totalSessions 
               }}
           </span>
           <span v-else class="value">-</span>
-          <span class="regular">rec.</span>
+          <span class="regular">records</span>
         </div>
         <div class="cell charts">charts</div>
         <div class="cell map">map</div>
@@ -52,7 +52,7 @@
           <div>
               <span class="value" v-if="resultReady">
                 {{ 
-                  result[selectedYear][selectedType]
+                  result[middleIndex][selectedType]
                   .fastestActivity
                   .speed 
                 }}
@@ -64,7 +64,7 @@
             for 
             <span v-if="resultReady">
               {{ 
-                result[selectedYear][selectedType]
+                result[middleIndex][selectedType]
                 .fastestActivity
                 .distance 
               }}
@@ -77,7 +77,7 @@
           <div>
               <span class="value" v-if="resultReady">
                 {{ 
-                  result[selectedYear][selectedType]
+                  result[middleIndex][selectedType]
                   .longestActivity
                   .distance 
                 }}
@@ -89,7 +89,7 @@
             at 
             <span v-if="resultReady">
               {{ 
-                result[selectedYear][selectedType]
+                result[middleIndex][selectedType]
                 .longestActivity
                 .speed 
               }}
@@ -111,6 +111,7 @@
     components: {
         SportsSelectorComponent
     },
+    props: ['middleIndex'],
     setup() {
       const result = reactive({});
       var resultReady = ref(false);
@@ -153,7 +154,7 @@
                     } else if (activity.type === "Ride") {
                       sportType = "ride";
                     } else {
-                      sportType = "swim";
+                      return;
                     }
 
                     if (!organizedData[year]) {
@@ -164,7 +165,6 @@
                   });
 
                   await analyze(organizedData);
-                  // console.log("HERE!!!!!!!!!!");
                 }
               });
           }
@@ -172,6 +172,7 @@
 
         async function analyze(all_data) {
           const allYearName = "all";
+          const allActivitiesName = "all"
 
           for (const year in all_data) {
             result[year] = {};
@@ -179,6 +180,14 @@
             let totalSessions = 0;
             let totalHours = 0;
             let totalDistance = 0;
+
+            result[year][allActivitiesName] = {
+              totalSessions: 0,
+              totalHours: 0,
+              totalDistance: 0,
+              longestActivity: {distance: 0, speed: 0},
+              fastestActivity: {distance: 0, speed: 0}
+            };
 
             for (const sportType in yearData) {
               result[year][sportType] = {};
@@ -218,7 +227,34 @@
             result[year].totalSessions = totalSessions;
             result[year].totalHours = totalHours;
             result[year].totalDistance = totalDistance;
+
+            result[year][allActivitiesName].totalSessions += totalSessions;
+            result[year][allActivitiesName].totalHours += totalHours;
+            result[year][allActivitiesName].totalDistance += totalDistance;
+
+
+            if (
+              result[year].ride.longestActivity.distance >
+              result[year].run.longestActivity.distance
+            ) {
+              result[year][allActivitiesName].longestActivity = 
+              result[year].ride.longestActivity
+            } else {
+              result[year].run.longestActivity
+            }
+
+            if (
+              result[year].ride.longestActivity.speed >
+              result[year].run.longestActivity.speed
+            ) {
+              result[year][allActivitiesName].fastestActivity = 
+              result[year].ride.fastestActivity
+            } else {
+              result[year].run.fastestActivity
+            }
           }
+
+          // TO DO MAKE ALL RIDE AND RUN
 
           result[allYearName] = {
             totalSessions: 0,
@@ -235,7 +271,6 @@
           resultReady.value = true;
           console.log("DATA READY")
           console.log(toRaw(result));
-          // return result;
         }
 
         function reAuthorize(){
@@ -268,7 +303,6 @@
 
       return {
         result,
-        selectedYear: "2023",
         selectedType: "ride",
         resultReady,
       }
@@ -283,14 +317,15 @@
 <style>
 
 .panel {
-    padding: 20px;
+    padding: 12px;
     height: calc(100vh - 120px);
-    gap: 20px;
+    gap: 12px;
 }
 
 .panel {  
     display: grid;
-    grid-template-columns: 1fr 1.1fr 1.1fr 0.6fr 1.2fr 80px;
+    /* grid-template-columns: 1fr 1.1fr 1.1fr 0.6fr 1.2fr 80px; */
+    grid-template-columns: auto auto auto auto auto 80px;
     grid-template-rows: 80px 80px 80px 1fr 100px 100px;
     grid-auto-columns: 1fr;
     grid-auto-flow: row;
@@ -312,6 +347,7 @@
 .sportsSelector { 
     grid-area: sportsSelector;
     background: #3D348B  !important;
+    padding: 0 !important;
 }
 
 .time { 
@@ -362,6 +398,7 @@
     background-color: darkslategrey;
     border-radius: 16px;
     display: flex;
+    padding: 12px;
     justify-content: center;
     align-items: center;
     font-size: 1.25em;
@@ -374,13 +411,6 @@
     font-weight: bold;
 }
 
-.unit {
-    /* display: inline-block;
-    padding-top: 5px;
-    margin-left: 2px;
-    font-size: 0.75em; */
-}
-
 .regular {
     display: inline-block;
     margin-left: 6px;
@@ -390,7 +420,6 @@
   font-size: 0.75em;
   margin: -5px;
   display: block;
-  margin-bottom: 2px;
 }
 
 .small-header {
