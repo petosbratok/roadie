@@ -10,18 +10,21 @@
         >
             <div
                 class="slider-item"
-                :class="{ active: index === middleIndex }"
+                :class="{ 
+                    'active': index === middleIndex,
+                    'active-search': index === middleIndex && !isTouching
+                }"
                 v-for="(year, index) in years"
                 :key="year"
                 @click="selectYear(index)"
             >
-                {{ year }}
+                <span>{{ year }}</span>
             </div>
         </div>
     </div>
 </template>
   
-<script setup lang="ts">
+<script setup >
     import { ref } from 'vue';
 
     var animationOn = ref(false);
@@ -36,16 +39,14 @@
     const offsetLeft = ref("0");
 
     function selectYear(index) {
-        console.log("HI");
-        console.log(index);
         animationOn.value = true;
         middleIndex.value = index;
         offsetLeft.value = `calc(${(index) * offsetStep}px)`;
-        console.log(offsetLeft.value)
+        // console.log(offsetLeft.value)
         setTimeout(() => {
             animationOn.value = false;
-            console.log(offsetLeft.value)            
-        }, 300);
+            // console.log(offsetLeft.value)            
+        },   300);
     }
 
     let isTouching = ref(false);
@@ -102,7 +103,7 @@
     }
 </script>
   
-<script lang="ts">
+<script >
     export default {
     name: 'YearSelectorComponent'
     }
@@ -121,7 +122,7 @@
     height: 60px;
     bottom: 0px;
     padding: 8px 0;
-    padding-left: calc(50% - 52.8px);
+    padding-left: calc(50% - 55.8px);
     padding-right: 2000px;
     display: flex;
     justify-content: flex-start;
@@ -139,20 +140,24 @@
     margin: 4px;
     font-size: 20px;
     cursor: pointer;
-    transition: .3s;
+    transition: 600ms;
+    transition-property: all;
+    user-select: none;
 }
 
 .slider-item.active {
     background-color: rgb(0, 153, 255);
     border-color: rgb(0, 153, 255);
-    font-size: 28px;
-    width: 98px;
-    padding: 4.8px 16px;
+}
+
+.slider-item.active-search {
+    font-size: 24px;
+    min-width: 104px;
+    padding: 4.8px 24px;
     border-radius: 16px;
 }
 
 .animationOn {
-    transition-duration: 0.3s;
-    pointer-events: none;
+    transition-duration: 300ms;
 }
 </style>
