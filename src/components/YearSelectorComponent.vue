@@ -44,7 +44,7 @@ export default {
   },
   setup() {
     const endYear = 2019;
-    const years = ref(['All']);
+    const years = ref(['all']);
     onMounted(() => {
       const currentYear = new Date().getFullYear();
       for (let year = currentYear; year >= endYear; year--) {
@@ -161,6 +161,10 @@ export default {
     min-width: 104px;
     padding: 4.8px 24px;
     border-radius: 16px;
+}
+
+.slider-item span {
+  text-transform: capitalize;
 }
 
 .animationOn {

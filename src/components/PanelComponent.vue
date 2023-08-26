@@ -123,8 +123,8 @@
 
         async function getAndAnalyzeActivities(res) {
           const allActivitiesData = [];
-          // const requestSizes = [100, 100, 100, 100, 100];
-          const requestSizes = [100]
+          const requestSizes = [100, 100, 100, 100, 100];
+          // const requestSizes = [100]
           const totalPages = requestSizes.length;
           const totalRequests = totalPages;
           let successfulRequests = 0;
@@ -171,9 +171,6 @@
         }
 
         async function analyze(all_data) {
-          const allYearName = "all";
-          const allActivitiesName = "all"
-
           for (const year in all_data) {
             result[year] = {};
             const yearData = all_data[year];
@@ -181,7 +178,7 @@
             let totalHours = 0;
             let totalDistance = 0;
 
-            result[year][allActivitiesName] = {
+            result[year]['all'] = {
               totalSessions: 0,
               totalHours: 0,
               totalDistance: 0,
@@ -228,44 +225,100 @@
             result[year].totalHours = totalHours;
             result[year].totalDistance = totalDistance;
 
-            result[year][allActivitiesName].totalSessions += totalSessions;
-            result[year][allActivitiesName].totalHours += totalHours;
-            result[year][allActivitiesName].totalDistance += totalDistance;
+            result[year]['all'].totalSessions += totalSessions;
+            result[year]['all'].totalHours += totalHours;
+            result[year]['all'].totalDistance += totalDistance;
 
 
             if (
               result[year].ride.longestActivity.distance >
               result[year].run.longestActivity.distance
             ) {
-              result[year][allActivitiesName].longestActivity = 
+              result[year]['all'].longestActivity = 
               result[year].ride.longestActivity
             } else {
               result[year].run.longestActivity
             }
 
             if (
-              result[year].ride.longestActivity.speed >
-              result[year].run.longestActivity.speed
+              result[year].ride.fastestActivity.speed >
+              result[year].run.fastestActivity.speed
             ) {
-              result[year][allActivitiesName].fastestActivity = 
+              result[year]['all'].fastestActivity = 
               result[year].ride.fastestActivity
             } else {
               result[year].run.fastestActivity
             }
           }
 
-          // TO DO MAKE ALL RIDE AND RUN
+          result['all'] = {}
+          const activities = ['ride', 'swim', 'run', 'all'];
 
-          result[allYearName] = {
-            totalSessions: 0,
-            totalHours: 0,
-            totalDistance: 0,
-          };
+          for (const activity of activities) {
+            result['all'][activity] = {
+                fastestActivity: { distance: 0, speed: 0 },
+                longestActivity: { distance: 0, speed: 0 },
+                totalDistance: 0,
+                totalHours: 0,
+                totalSessions: 0,
+            };
+          }
 
           for (const year in all_data) {
-            result[allYearName].totalSessions += result[year].totalSessions;
-            result[allYearName].totalHours += result[year].totalHours;
-            result[allYearName].totalDistance += result[year].totalDistance;
+            const activities = all_data[year]
+
+            for (const activity in  activities) {
+              result['all'][activity].totalSessions 
+              += result[year][activity].totalSessions;
+
+              result['all'][activity].totalHours
+              += result[year][activity].totalHours;
+              
+              result['all'][activity].totalDistance 
+              += result[year][activity].totalDistance;
+
+
+              result['all']['all'].totalSessions 
+              += result[year][activity].totalSessions;
+
+              result['all']['all'].totalHours
+              += result[year][activity].totalHours;
+              
+              result['all']['all'].totalDistance 
+              += result[year][activity].totalDistance;
+
+              if (
+                result[year][activity].longestActivity.distance >
+                result['all']['all'].longestActivity.distance
+              ) {
+                result['all']['all'].longestActivity = 
+                result[year][activity].longestActivity
+              }
+              
+              if (
+                result[year][activity].fastestActivity.speed >
+                result['all']['all'].fastestActivity.speed
+              ) {
+                result['all']['all'].fastestActivity = 
+                result[year][activity].fastestActivity
+              } 
+
+              if (
+                result[year][activity].longestActivity.distance >
+                result['all'][activity].longestActivity.distance
+              ) {
+                result['all'][activity].longestActivity = 
+                result[year][activity].longestActivity
+              }
+              
+              if (
+                result[year][activity].fastestActivity.speed >
+                result['all'][activity].fastestActivity.speed
+              ) {
+                result['all'][activity].fastestActivity = 
+                result[year][activity].fastestActivity
+              } 
+            }
           }
 
           resultReady.value = true;
@@ -303,7 +356,7 @@
 
       return {
         result,
-        selectedType: "ride",
+        selectedType: "run",
         resultReady,
       }
     },
