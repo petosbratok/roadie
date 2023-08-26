@@ -6,10 +6,10 @@
           <span 
             class="value"
             :style="{
-              'width': `${resultReady ? result[middleIndex][selectedType].totalDistance.toFixed(1).toString().length * 12.6 : 12.6}px`
+              'width': `${resultReady ? result[yearSelected][selectedType].totalDistance.toFixed(1).toString().length * 12.6 : 12.6}px`
             }"
           >
-            {{ resultReady ? result[middleIndex][selectedType].totalDistance.toFixed(1) : '-' }}
+            {{ resultReady ? result[yearSelected][selectedType].totalDistance.toFixed(1) : '-' }}
           </span>
           <span class="regular">km</span>
         </div>
@@ -19,14 +19,14 @@
                   class="value" 
                   :style="{
                     'width': `${ resultReady ? (
-                    result[middleIndex][selectedType].totalDistance /
-                    result[middleIndex][selectedType].totalHours
+                    result[yearSelected][selectedType].totalDistance /
+                    result[yearSelected][selectedType].totalHours
                     ).toFixed(1).toString().length * 12.6 : 12.6}px`
                   }"
                 >
                   {{ resultReady ? (
-                    result[middleIndex][selectedType].totalDistance /
-                    result[middleIndex][selectedType].totalHours
+                    result[yearSelected][selectedType].totalDistance /
+                    result[yearSelected][selectedType].totalHours
                   ).toFixed(1) : '-'}}
                 </span>
                 <span class="regular">km/h</span>
@@ -36,17 +36,19 @@
             </div>
         </div>
         <div class="cell sportsSelector">
-            <SportsSelectorComponent></SportsSelectorComponent>            
+            <SportsSelectorComponent
+              @sports-selected-changed="onChangeSportsType"
+            ></SportsSelectorComponent>            
         </div>
         <div class="cell time">
             <span 
               class="value" 
               :style="{
-                'width': `${resultReady ? result[middleIndex][selectedType].totalHours.toFixed(1).toString().length * 12.6 : 12.6}px`
+                'width': `${resultReady ? result[yearSelected][selectedType].totalHours.toFixed(1).toString().length * 12.6 : 12.6}px`
               }"
             >
               {{ resultReady ?
-                result[middleIndex][selectedType].totalHours.toFixed(1) :
+                result[yearSelected][selectedType].totalHours.toFixed(1) :
                 '-'
               }}
             </span>
@@ -56,12 +58,12 @@
           <span 
             class="value" 
             :style="{
-              'width': `${resultReady ? result[middleIndex][selectedType].totalSessions.toString().length * 12.6 : 12.6}px`
+              'width': `${resultReady ? result[yearSelected][selectedType].totalSessions.toString().length * 12.6 : 12.6}px`
             }"
           >
             {{ 
               resultReady ?
-              result[middleIndex][selectedType].totalSessions :
+              result[yearSelected][selectedType].totalSessions :
               '-'
             }}
           </span>
@@ -73,7 +75,7 @@
           <div>
               <span class="value" v-if="resultReady">
                 {{ 
-                  result[middleIndex][selectedType]
+                  result[yearSelected][selectedType]
                   .fastestActivity
                   .speed 
                 }}
@@ -85,7 +87,7 @@
             for 
             <span v-if="resultReady">
               {{ 
-                result[middleIndex][selectedType]
+                result[yearSelected][selectedType]
                 .fastestActivity
                 .distance 
               }}
@@ -98,7 +100,7 @@
           <div>
               <span class="value" v-if="resultReady">
                 {{ 
-                  result[middleIndex][selectedType]
+                  result[yearSelected][selectedType]
                   .longestActivity
                   .distance 
                 }}
@@ -110,7 +112,7 @@
             at 
             <span v-if="resultReady">
               {{ 
-                result[middleIndex][selectedType]
+                result[yearSelected][selectedType]
                 .longestActivity
                 .speed 
               }}
@@ -132,7 +134,7 @@
     components: {
         SportsSelectorComponent
     },
-    props: ['middleIndex'],
+    props: ['yearSelected'],
     setup() {
       const result = reactive({});
       var resultReady = ref(false);
@@ -144,8 +146,9 @@
 
         async function getAndAnalyzeActivities(res) {
           const allActivitiesData = [];
-          const requestSizes = [100, 100, 100, 100, 100];
-          // const requestSizes = [100]
+          // const requestSizes = [100, 100, 100, 100, 100];
+          const requestSizes = [200, 200, 200];
+          // const requestSizes = [200]
           const totalPages = requestSizes.length;
           const totalRequests = totalPages;
           let successfulRequests = 0;
@@ -286,61 +289,39 @@
           }
 
           for (const year in all_data) {
-            const activities = all_data[year]
+            const activities = all_data[year];
 
-            for (const activity in  activities) {
-              result['all'][activity].totalSessions 
-              += result[year][activity].totalSessions;
+            for (const activity in activities) {
+                const currentActivity = result[year][activity];
+                const allActivity = result['all'][activity];
+                const allAll = result['all']['all'];
 
-              result['all'][activity].totalHours
-              += result[year][activity].totalHours;
-              
-              result['all'][activity].totalDistance 
-              += result[year][activity].totalDistance;
+                allActivity.totalSessions += currentActivity.totalSessions;
+                allActivity.totalHours += currentActivity.totalHours;
+                allActivity.totalDistance += currentActivity.totalDistance;
 
+                allAll.totalSessions += currentActivity.totalSessions;
+                allAll.totalHours += currentActivity.totalHours;
+                allAll.totalDistance += currentActivity.totalDistance;
 
-              result['all']['all'].totalSessions 
-              += result[year][activity].totalSessions;
+                if (currentActivity.longestActivity.distance > allAll.longestActivity.distance) {
+                    allAll.longestActivity = currentActivity.longestActivity;
+                }
 
-              result['all']['all'].totalHours
-              += result[year][activity].totalHours;
-              
-              result['all']['all'].totalDistance 
-              += result[year][activity].totalDistance;
+                if (currentActivity.fastestActivity.speed > allAll.fastestActivity.speed) {
+                    allAll.fastestActivity = currentActivity.fastestActivity;
+                }
 
-              if (
-                result[year][activity].longestActivity.distance >
-                result['all']['all'].longestActivity.distance
-              ) {
-                result['all']['all'].longestActivity = 
-                result[year][activity].longestActivity
-              }
-              
-              if (
-                result[year][activity].fastestActivity.speed >
-                result['all']['all'].fastestActivity.speed
-              ) {
-                result['all']['all'].fastestActivity = 
-                result[year][activity].fastestActivity
-              } 
+                if (currentActivity.longestActivity.distance > allActivity.longestActivity.distance) {
+                    allActivity.longestActivity = currentActivity.longestActivity;
+                }
 
-              if (
-                result[year][activity].longestActivity.distance >
-                result['all'][activity].longestActivity.distance
-              ) {
-                result['all'][activity].longestActivity = 
-                result[year][activity].longestActivity
-              }
-              
-              if (
-                result[year][activity].fastestActivity.speed >
-                result['all'][activity].fastestActivity.speed
-              ) {
-                result['all'][activity].fastestActivity = 
-                result[year][activity].fastestActivity
-              } 
+                if (currentActivity.fastestActivity.speed > allActivity.fastestActivity.speed) {
+                    allActivity.fastestActivity = currentActivity.fastestActivity;
+                }
             }
-          }
+        }
+
 
           resultReady.value = true;
           console.log("DATA READY")
@@ -377,13 +358,17 @@
 
       return {
         result,
-        selectedType: "ride",
         resultReady,
       }
     },
+    data() {
+    return {
+        selectedType: "ride",
+      };
+    },
     methods: {
-      isEmptyObject(obj) {
-        return Object.keys(obj).length === 0;
+      onChangeSportsType(newType) {
+        this.selectedType = newType;
       }
     }
   }
@@ -398,7 +383,6 @@
 
 .panel {  
     display: grid;
-    /* grid-template-columns: 1fr 1.1fr 1.1fr 0.6fr 1.2fr 80px; */
     grid-template-columns: auto auto auto auto auto 80px;
     grid-template-rows: 80px 80px 80px 1fr 100px 100px;
     grid-auto-columns: 1fr;

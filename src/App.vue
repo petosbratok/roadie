@@ -1,10 +1,10 @@
 <template>
   <!-- TO DO RENAME TO YEAR!!!!!!!!!!!!!!!!!!!!!!!! -->
   <PanelComponent 
-    :middleIndex="middleIndex"
+    :yearSelected="yearSelected"
   ></PanelComponent>
   <YearSelectorComponent 
-    @middle-index-changed="onChangeIndex"
+    @year-selected-changed="onChangeYear"
   ></YearSelectorComponent>
 </template>
 
@@ -20,12 +20,12 @@ export default {
   },
   data() {
     return {
-      middleIndex: new Date().getFullYear()
+      yearSelected: new Date().getFullYear()
     }
   },
   methods: {
-    onChangeIndex(index) {
-      this.middleIndex = index;
+    onChangeYear(year) {
+      this.yearSelected = year;
     }
   }
 }

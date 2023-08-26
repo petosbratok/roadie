@@ -28,6 +28,7 @@
 
 <script >
     export default {
+    emits: ['sports-selected-changed'],
     name: 'SportsSelectorComponent',
     data() {
         return {
@@ -37,10 +38,11 @@
     methods: {
         selectOption(index) {
             if (this.selectedOption == index) {
-                console.log('hi');
                 this.selectedOption = 2;
+                this.$emit('sports-selected-changed', 'all');
             } else {
                 this.selectedOption = index;
+                this.$emit('sports-selected-changed', ['ride', 'run'][index]);
             }
         },
     },

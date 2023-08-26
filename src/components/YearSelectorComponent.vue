@@ -28,7 +28,7 @@
 import { ref, onMounted } from 'vue';
 
 export default {
-  emits: ['middle-index-changed'],
+  emits: ['year-selected-changed'],
   name: 'YearSelectorComponent',
   data() {
     return {
@@ -62,7 +62,7 @@ export default {
         this.animationOn = true;
         this.middleIndex = index;
         this.offsetLeft = `calc(${index * this.offsetStep}px)`;
-        this.$emit('middle-index-changed', this.years[index]);
+        this.$emit('year-selected-changed', this.years[index]);
         setTimeout(() => {
             this.animationOn = false;
         }, 300);
@@ -83,7 +83,7 @@ export default {
         this.offsetStep * (this.years.length - 1) - 16,
         newOffset
       );
-      newOffset = Math.min(16, newOffset);
+      newOffset = Math.min(24, newOffset);
       this.offsetLeft = `calc(${newOffset}px)`;
 
       const middlePos = window.innerWidth / 2;
@@ -128,6 +128,7 @@ export default {
     height: 60px;
     bottom: 0px;
     padding: 8px 0;
+    margin-bottom: 8px;
     padding-left: calc(50% - 55.8px);
     padding-right: 2000px;
     display: flex;
