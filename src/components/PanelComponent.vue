@@ -1,24 +1,34 @@
 <template>
     <div class="panel">
-        <div class="cell distance">
+        <div 
+          class="cell distance"
+        >
           <span 
             class="value"
-            v-if="resultReady"
+            :style="{
+              'width': `${resultReady ? result[middleIndex][selectedType].totalDistance.toFixed(1).toString().length * 12.6 : 12.6}px`
+            }"
           >
-            {{ result[middleIndex][selectedType].totalDistance.toFixed(1) }}
+            {{ resultReady ? result[middleIndex][selectedType].totalDistance.toFixed(1) : '-' }}
           </span>
-          <span v-else class="value">-</span>
           <span class="regular">km</span>
         </div>
         <div class="cell speed">
             <div>
-                <span class="value" v-if="resultReady">
-                  {{(
+                <span 
+                  class="value" 
+                  :style="{
+                    'width': `${ resultReady ? (
                     result[middleIndex][selectedType].totalDistance /
                     result[middleIndex][selectedType].totalHours
-                  ).toFixed(1)}}
+                    ).toFixed(1).toString().length * 12.6 : 12.6}px`
+                  }"
+                >
+                  {{ resultReady ? (
+                    result[middleIndex][selectedType].totalDistance /
+                    result[middleIndex][selectedType].totalHours
+                  ).toFixed(1) : '-'}}
                 </span>
-                <span v-else class="value">-</span>
                 <span class="regular">km/h</span>
             </div>
             <div>
@@ -29,22 +39,33 @@
             <SportsSelectorComponent></SportsSelectorComponent>            
         </div>
         <div class="cell time">
-            <span class="value" v-if="resultReady">
-              {{ 
-                result[middleIndex][selectedType].totalHours.toFixed(1) 
+            <span 
+              class="value" 
+              :style="{
+                'width': `${resultReady ? result[middleIndex][selectedType].totalHours.toFixed(1).toString().length * 12.6 : 12.6}px`
+              }"
+            >
+              {{ resultReady ?
+                result[middleIndex][selectedType].totalHours.toFixed(1) :
+                '-'
               }}
             </span>
-            <span v-else class="value">-</span>
             <span class="regular">hours</span>
         </div>
         <div class="cell session-count">
-          <span class="value" v-if="resultReady">
-              {{ 
-                result[middleIndex][selectedType].totalSessions 
-              }}
+          <span 
+            class="value" 
+            :style="{
+              'width': `${resultReady ? result[middleIndex][selectedType].totalSessions.toString().length * 12.6 : 12.6}px`
+            }"
+          >
+            {{ 
+              resultReady ?
+              result[middleIndex][selectedType].totalSessions :
+              '-'
+            }}
           </span>
-          <span v-else class="value">-</span>
-          <span class="regular">records</span>
+          <span class="regular" style="margin-left: 8px">records</span>
         </div>
         <div class="cell charts">charts</div>
         <div class="cell map">map</div>
@@ -356,7 +377,7 @@
 
       return {
         result,
-        selectedType: "run",
+        selectedType: "ride",
         resultReady,
       }
     },
@@ -455,13 +476,20 @@
     justify-content: center;
     align-items: center;
     font-size: 1.25em;
+    transition-duration: .3s;
 }
 
 .value {
+    display: inline-block;
     position: relative;
     z-index: 2;
     font-size: 1.25em;
     font-weight: bold;
+    transition-duration: 0.3s;
+}
+
+.distance .value {
+  width: 12.6px;
 }
 
 .regular {
