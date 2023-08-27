@@ -154,10 +154,15 @@
           </p>
         </div>
         <div 
+          class="loader-blankspace"
+          :style="{
+            'opacity': `${ resultReady ? '0' : '1'}`            
+          }"
+        ></div>
+        <div 
           class="loader"
           :style="{
-            'opacity': `${ resultReady ? '1' : '1'}`            
-            // 'opacity': `${ resultReady ? '0' : '1'}`            
+            'opacity': `${ resultReady ? '0' : '1'}`            
           }"
         ></div> 
     </div>
@@ -184,7 +189,6 @@
 
         async function getAndAnalyzeActivities(res) {
           const allActivitiesData = [];
-          // const requestSizes = [100, 100, 100, 100, 100];
           const requestSizes = [200, 200, 200];
           // const requestSizes = [100]
           const totalPages = requestSizes.length;
@@ -534,13 +538,24 @@
   border-radius: 8px;
 }
 
+.loader-blankspace {
+  position: absolute;
+  width: 60px;
+  height: 36.4px;
+  bottom: 21.2px;
+  left: -23px;
+  z-index: 2;
+  background-color: var(--dark-blue);  
+  transition-duration: 600ms;
+}
+
 .loader {
   position: absolute;
   width: 33.4px;
   height: 33.4px;
   bottom: 17.2px;
-  left: 8px;
-  z-index: 2;
+  padding-left: 8px;
+  z-index: 3;
   border-radius: 12px;
   flex: 0 0 auto;
   padding: 4px 12px;
