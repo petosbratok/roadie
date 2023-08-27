@@ -73,59 +73,97 @@
         <div class="cell map">map</div>
         <div class="cell top-speed">
           <div>
-              <span class="value" v-if="resultReady">
+              <span 
+                class="value" 
+                :style="{
+                  'width': `${resultReady ? result[yearSelected][selectedType]
+                  .fastestActivity
+                  .speed.toFixed(1).toString().length * 12.6 : 12.6}px`
+                }"
+              >
                 {{ 
+                  resultReady ?
                   result[yearSelected][selectedType]
                   .fastestActivity
-                  .speed 
+                  .speed.toFixed(1)  :
+                  '-'
                 }}
               </span>
-              <span v-else class="value">-</span>
               <span class="regular">km/h</span>
           </div>
           <p class="small-text">
             for 
-            <span v-if="resultReady">
-              {{ 
-                result[yearSelected][selectedType]
-                .fastestActivity
-                .distance 
-              }}
-            </span>
-            <span v-else class="value">-</span>
+            <span 
+                class="value" 
+                :style="{
+                  'width': `${resultReady ? result[yearSelected][selectedType]
+                  .fastestActivity
+                  .distance.toFixed(1).toString().length * 10 : 10}px`
+                }"
+              >
+                {{ 
+                  resultReady ?
+                  result[yearSelected][selectedType]
+                  .fastestActivity
+                  .distance.toFixed(1)  :
+                  '-'
+                }}
+              </span>
             km
           </p>
         </div>
         <div class="cell top-distance">
           <div>
-              <span class="value" v-if="resultReady">
+              <span 
+                class="value" 
+                :style="{
+                  'width': `${resultReady ? result[yearSelected][selectedType]
+                  .longestActivity
+                  .distance.toFixed(1).toString().length * 12.6 : 12.6}px`
+                }"
+              >
                 {{ 
+                  resultReady ?
                   result[yearSelected][selectedType]
                   .longestActivity
-                  .distance 
+                  .distance.toFixed(1)  :
+                  '-'
                 }}
               </span>
-              <span v-else class="value">-</span>
               <span class="regular">km</span>
           </div>
           <p class="small-text">
             at 
-            <span v-if="resultReady">
-              {{ 
-                result[yearSelected][selectedType]
-                .longestActivity
-                .speed 
-              }}
+            <span 
+                class="value" 
+                :style="{
+                  'width': `${resultReady ? result[yearSelected][selectedType]
+                  .longestActivity
+                  .speed.toFixed(1).toString().length * 10 : 10}px`
+                }"
+              >
+                {{ 
+                  resultReady ?
+                  result[yearSelected][selectedType]
+                  .longestActivity
+                  .speed.toFixed(1)  :
+                  '-'
+                }}
             </span>
-            <span v-else class="value">-</span>
             km/h
           </p>
         </div>
+        <div 
+          class="loader"
+          :style="{
+            'opacity': `${ resultReady ? '1' : '1'}`            
+            // 'opacity': `${ resultReady ? '0' : '1'}`            
+          }"
+        ></div> 
     </div>
 </template>
 
 <script>
-  /* eslint-disable no-unused-vars */
   import SportsSelectorComponent from './SportsSelectorComponent.vue'
   import { ref, onMounted, reactive, toRaw } from 'vue';
 
@@ -148,7 +186,7 @@
           const allActivitiesData = [];
           // const requestSizes = [100, 100, 100, 100, 100];
           const requestSizes = [200, 200, 200];
-          // const requestSizes = [200]
+          // const requestSizes = [100]
           const totalPages = requestSizes.length;
           const totalRequests = totalPages;
           let successfulRequests = 0;
@@ -494,5 +532,58 @@
   font-size: 0.85em;
   margin-bottom: 8px;
   border-radius: 8px;
+}
+
+.loader {
+  position: absolute;
+  width: 33.4px;
+  height: 33.4px;
+  bottom: 17.2px;
+  left: 8px;
+  z-index: 2;
+  border-radius: 12px;
+  flex: 0 0 auto;
+  padding: 4px 12px;
+  margin: 4px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: 600ms;
+  transition-property: all;
+  user-select: none;
+	overflow: hidden;
+}
+
+.loader::before {
+		content: '';
+		position: absolute;
+		z-index: -2;
+		left: -50%;
+		top: -95%;
+		width: 200%;
+		height: 300%;
+		background-color: #399953;
+		background-repeat: no-repeat;
+		background-size: 50% 50%, 50% 50%;
+		background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+		background-image: linear-gradient(#399953, #399953), linear-gradient(#fbb300, #fbb300), linear-gradient(#d53e33, #d53e33), linear-gradient(#377af5, #377af5);
+		animation: rotate 1s linear infinite;
+	}
+	
+	.loader::after {
+		content: '';
+		position: absolute;
+		z-index: -1;
+		left: 6px;
+		top: 6px;
+		width: calc(100% - 12px);
+		height: calc(100% - 12px);
+    background: var(--dark-blue);
+    border-radius: 5px;
+	}
+
+  @keyframes rotate {
+	100% {
+		transform: rotate(1turn);
+	}
 }
 </style>
