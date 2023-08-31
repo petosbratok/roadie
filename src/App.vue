@@ -1,5 +1,4 @@
 <template>
-  <!-- TO DO RENAME TO YEAR!!!!!!!!!!!!!!!!!!!!!!!! -->
   <PanelComponent 
     :yearSelected="yearSelected"
   ></PanelComponent>

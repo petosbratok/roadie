@@ -69,7 +69,22 @@
           </span>
           <span class="regular" style="margin-left: 8px">records</span>
         </div>
-        <div class="cell charts">charts</div>
+        <div class="cell charts">
+          <div v-if="resultReady" class="charts-panel-container">
+            <ChartComponent 
+              class="chart-block"
+              :data="result[yearSelected][selectedType]"
+              :id="'chartOne'"
+              :yLabel="'speed'"
+            ></ChartComponent>
+            <ChartComponent 
+              class="chart-block"
+              :data="result[yearSelected][selectedType]"
+              :id="'chartTwo'"
+              :yLabel="'distance'"
+            ></ChartComponent>
+          </div>
+        </div>
         <div class="cell map">map</div>
         <div class="cell top-speed">
           <div>
@@ -155,14 +170,16 @@
         </div>
         <div 
           class="loader-blankspace"
-          :style="{
-            'opacity': `${ resultReady ? '0' : '1'}`            
+          :class="{
+            disappear: resultReady,
+            hide: hideLoader
           }"
         ></div>
         <div 
           class="loader"
-          :style="{
-            'opacity': `${ resultReady ? '0' : '1'}`            
+          :class="{
+            disappear: resultReady,
+            hide: hideLoader
           }"
         ></div> 
     </div>
@@ -170,17 +187,20 @@
 
 <script>
   import SportsSelectorComponent from './SportsSelectorComponent.vue'
-  import { ref, onMounted, reactive, toRaw } from 'vue';
+  import ChartComponent from './ChartComponent.vue'
+  import { ref, onMounted, reactive } from 'vue';
 
   export default {
     name: 'PanelComponent',
     components: {
-        SportsSelectorComponent
+        SportsSelectorComponent,
+        ChartComponent
     },
     props: ['yearSelected'],
     setup() {
       const result = reactive({});
       var resultReady = ref(false);
+      var hideLoader = ref(false);
 
       onMounted(() => {
         const client_id = '80748';
@@ -249,7 +269,8 @@
               totalHours: 0,
               totalDistance: 0,
               longestActivity: {distance: 0, speed: 0},
-              fastestActivity: {distance: 0, speed: 0}
+              fastestActivity: {distance: 0, speed: 0},
+              sessions: []
             };
 
             for (const sportType in yearData) {
@@ -257,6 +278,7 @@
               result[year][sportType].totalDistance = 0;
               result[year][sportType].totalHours = 0;
               result[year][sportType].totalSessions = 0;
+              result[year][sportType]['sessions'] = [];
 
               const activities = yearData[sportType];
               let longestActivity = { distance: 0, speed: 0 };
@@ -266,6 +288,27 @@
                 const distance = parseFloat((post.distance / 1000).toFixed(1));
                 const speed = parseFloat((post.average_speed * 3.6).toFixed(1));
                 
+                const date = new Date(post.start_date_local);
+                const year = date.getFullYear();
+
+                const formattedDate = date.toLocaleString('en', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: '2-digit'
+                });
+
+                result[year][sportType].sessions.push({
+                  speed: speed,
+                  distance: distance,
+                  date: formattedDate
+                })
+
+                result[year]['all'].sessions.push({
+                  speed: speed,
+                  distance: distance,
+                  date: formattedDate
+                })
+
                 if (distance > longestActivity.distance) {
                   longestActivity = { distance, speed };
                 }
@@ -327,6 +370,7 @@
                 totalDistance: 0,
                 totalHours: 0,
                 totalSessions: 0,
+                sessions: []
             };
           }
 
@@ -341,10 +385,12 @@
                 allActivity.totalSessions += currentActivity.totalSessions;
                 allActivity.totalHours += currentActivity.totalHours;
                 allActivity.totalDistance += currentActivity.totalDistance;
+                allActivity.sessions = allActivity.sessions.concat(currentActivity.sessions)
 
                 allAll.totalSessions += currentActivity.totalSessions;
                 allAll.totalHours += currentActivity.totalHours;
                 allAll.totalDistance += currentActivity.totalDistance;
+                allAll.sessions = allAll.sessions.concat(currentActivity.sessions)
 
                 if (currentActivity.longestActivity.distance > allAll.longestActivity.distance) {
                     allAll.longestActivity = currentActivity.longestActivity;
@@ -366,10 +412,14 @@
 
 
           resultReady.value = true;
-          console.log("DATA READY")
-          console.log(toRaw(result));
+
+          setTimeout(() => {
+            hideLoader.value = true;
+          }, 600);
+          // console.log(toRaw(result));
         }
 
+        // eslint-disable-next-line no-unused-vars
         function reAuthorize(){
           const auth_link = "https://www.strava.com/oauth/token"
           try {
@@ -391,7 +441,7 @@
             }).then((res) => res.json())
                 .then(res => getAndAnalyzeActivities(res))
           } catch {
-            console.log("Strava API request failed. Try turning on VPN")
+            console.log("Strava API request failed.")
           }
         }
 
@@ -401,6 +451,7 @@
       return {
         result,
         resultReady,
+        hideLoader,
       }
     },
     data() {
@@ -444,6 +495,10 @@
     background: #D34E24 !important;
 }
 
+.distance * {
+  color: #f6e2dd !important
+}
+
 .sportsSelector { 
     grid-area: sportsSelector;
     background: #3D348B  !important;
@@ -455,15 +510,34 @@
     background: #31AFD4 !important;
 }
 
+.time * {
+  color: #def1f7 !important
+}
+
 .session-count { 
     grid-area: session-count;
     grid-area: distance;
     background: #EF476F !important;
 }
 
+.session-count * {
+  color: #f7dde3 !important;
+}
+
 .charts { 
     grid-area: charts;
-    background: #3B1F2B !important;
+    background: #B8B8AA !important;
+  }
+
+  .chart-block:first-child {
+    margin-bottom: 32px; /* Override margin for the first element */
+  }
+  
+  .charts-panel-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .map { grid-area: map; }
@@ -474,10 +548,18 @@
     background: #E6AF2E !important;
 }
 
+.speed * {
+  color: #f3ead1 !important;
+}
+
 .top-speed {
   flex-direction: column;
   grid-area: top-speed;
   background: #2E86AB !important;
+}
+
+.top-speed * {
+  color: #d9e3e7 !important;
 }
 
 .top-speed .small-header {
@@ -488,6 +570,10 @@
   flex-direction: column;
   grid-Area: top-distance;
   background-color: #A23B72 !important;
+}
+
+.top-distance * {
+  color: #efd0e0 !important;
 }
 
 .top-distance .small-header {
@@ -540,32 +626,42 @@
 
 .loader-blankspace {
   position: absolute;
-  width: 60px;
-  height: 36.4px;
-  bottom: 21.2px;
-  left: -23px;
+  /* width: 60px;
+  height: 60px;
+  bottom: 10px;
+  left: -23px; */
+  width: 100vw;
+  height: 100vh;
+  left: 0;
+  bottom: 0;
   z-index: 2;
   background-color: var(--dark-blue);  
+  background: rgba(5, 4, 22, .5);
+  backdrop-filter: blur(6px);
   transition-duration: 600ms;
 }
 
 .loader {
   position: absolute;
-  width: 33.4px;
-  height: 33.4px;
+  /* width: 33.7px;
+  height: 33.7px;
   bottom: 17.2px;
-  padding-left: 8px;
+  padding-left: 8px; */
   z-index: 3;
   border-radius: 12px;
   flex: 0 0 auto;
-  padding: 4px 12px;
-  margin: 4px;
+  /* padding: 4px 12px; */
+  /* margin: 4px; */
   font-size: 20px;
   cursor: pointer;
   transition: 600ms;
   transition-property: all;
   user-select: none;
 	overflow: hidden;
+  height: 40px;
+  width: 40px;
+  left: calc(50vw - 20px);
+  bottom: 40vh;
 }
 
 .loader::before {
@@ -596,9 +692,23 @@
     border-radius: 5px;
 	}
 
+  .disappear {
+    animation: disappear 600ms forwards;
+  }
+
+  .hide {
+    display: none;
+  }
+
+  @keyframes disappear {
+    100% {
+      opacity: 0;
+    }
+  }
+
   @keyframes rotate {
-	100% {
-		transform: rotate(1turn);
-	}
-}
+    100% {
+      transform: rotate(1turn);
+    }
+  }
 </style>
