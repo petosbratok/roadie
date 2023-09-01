@@ -1,6 +1,6 @@
 <template>
     <div class="chart-container" style="position: relative;">
-        <canvas :id="id"></canvas>
+        <canvas :id="yLabel"></canvas>
     </div>
 </template>
 
@@ -10,7 +10,7 @@ import Chart from 'chart.js/auto';
 
 export default {
     name: 'PanelComponent',
-    props: ['data', 'id', 'yLabel'],
+    props: ['data', 'yLabel'],
     setup(props) {
         const sortedSessions = [...props.data.sessions].sort((a, b) => a[props.yLabel] - b[props.yLabel]);
 
@@ -30,7 +30,7 @@ export default {
         ));
 
         onMounted(() => {
-            const ctx = document.getElementById(props.id);
+            const ctx = document.getElementById(props.yLabel);
             const chart = new Chart(ctx, {
                 type: 'line',
                 data: {

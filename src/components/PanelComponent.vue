@@ -74,18 +74,18 @@
             <ChartComponent 
               class="chart-block"
               :data="result[yearSelected][selectedType]"
-              :id="'chartOne'"
               :yLabel="'speed'"
             ></ChartComponent>
             <ChartComponent 
               class="chart-block"
               :data="result[yearSelected][selectedType]"
-              :id="'chartTwo'"
               :yLabel="'distance'"
             ></ChartComponent>
           </div>
         </div>
-        <div class="cell map">map</div>
+        <div class="cell map">
+          <MapComponent></MapComponent>
+        </div>
         <div class="cell top-speed">
           <div>
               <span 
@@ -188,13 +188,15 @@
 <script>
   import SportsSelectorComponent from './SportsSelectorComponent.vue'
   import ChartComponent from './ChartComponent.vue'
+  import MapComponent from './MapComponent.vue'
   import { ref, onMounted, reactive } from 'vue';
 
   export default {
     name: 'PanelComponent',
     components: {
         SportsSelectorComponent,
-        ChartComponent
+        ChartComponent,
+        MapComponent,
     },
     props: ['yearSelected'],
     setup() {
@@ -209,8 +211,8 @@
 
         async function getAndAnalyzeActivities(res) {
           const allActivitiesData = [];
-          const requestSizes = [200, 200, 200];
-          // const requestSizes = [100]
+          // const requestSizes = [200, 200, 200];
+          const requestSizes = [100]
           const totalPages = requestSizes.length;
           const totalRequests = totalPages;
           let successfulRequests = 0;
@@ -540,7 +542,11 @@
     justify-content: center;
 }
 
-.map { grid-area: map; }
+.map { 
+  grid-area: map;
+  padding: 0 !important;
+  overflow: hidden;
+}
 
 .speed { 
     grid-area: speed;
