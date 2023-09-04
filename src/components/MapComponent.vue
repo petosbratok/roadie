@@ -2,69 +2,91 @@
     <div class="map-container">
       <div id="map"></div>
     </div>
-</template>
-
-<script>
-/* eslint-disable no-unused-vars */
-import PolylineEncoded from '../Polyline.encoded.js';
-import L from 'leaflet';
-import mapboxgl from 'mapbox-gl';
-
-export default {
+  </template>
+  
+  <script>
+  import mapboxgl from 'mapbox-gl';
+  
+  export default {
     name: 'MapComponent',
-    components: {
-    },
+    props: ['data'],
     mounted() {
-        const mapbox_token = 'pk.eyJ1IjoicGV0b3NicmF0b2siLCJhIjoiY2wxdWtnNjM5MDB2ZzNkbDNzNzV2MThnbCJ9.--UWf-pthCKugxhxF4kmbQ';
-
-        let mapboxScript = document.createElement('script')
-        mapboxScript.setAttribute(
-            'src', 
-            'https://api.mapbox.com/mapbox.js/v3.3.1/mapbox.js'
-        )
-        document.head.appendChild(mapboxScript)
-
-        let jqueryScript = document.createElement('script')
-        jqueryScript.setAttribute(
-            'src', 
-            'https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js'
-        )
-        document.head.appendChild(jqueryScript)
-
-        // L.mapbox.accessToken = mapbox_token;
-        // const map = L.mapbox.map('map')
-        //     .setView([59.97, 30.25], 12)
-        //     .addLayer(L.mapbox.styleLayer('mapbox://styles/petosbratok/cl1ukjde8000514ltcfj80eto'));
-
-        mapboxgl.accessToken = mapbox_token;
-
-        // Create a map instance
-        const map = new mapboxgl.Map({
-        container: 'map', // Specify the ID of the HTML element where the map will be placed
-        // style: 'mapbox://styles/mapbox/streets-v11', // Specify the map style URL
-        style: 'mapbox://styles/petosbratok/cl1ukjde8000514ltcfj80eto',
-        center: [-74.006, 40.7128], // Specify the initial center of the map [longitude, latitude]
-        zoom: 10, // Specify the initial zoom level
+      const decoder = require('@mapbox/polyline');
+      const mapbox_token = 'pk.eyJ1IjoicGV0b3NicmF0b2siLCJhIjoiY2wxdWtnNjM5MDB2ZzNkbDNzNzV2MThnbCJ9.--UWf-pthCKugxhxF4kmbQ';
+  
+      mapboxgl.accessToken = mapbox_token;
+  
+      const mapboxStyle = 'mapbox://styles/petosbratok/cl1ukjde8000514ltcfj80eto';
+  
+      const map = new mapboxgl.Map({
+        container: 'map',
+        style: mapboxStyle,
+        // center: [59.97, 30.25],
+        center: [30.25, 59.97],
+        zoom: 10,
+      });
+  
+      const polylineOptions = {
+        color: '#BDD9BF',
+        weight: 3,
+        opacity: 0.7,
+        smoothFactor: 2.5,
+      };
+  
+      setTimeout(() => {
+        this.data.forEach((encodedPolyline, index) => {
+        //   const coordinates = decoder.decode(encodedPolyline);
+          const coordinates = decoder.decode(encodedPolyline).map(coord => [coord[1], coord[0]]);
+          const sourceId = `polyline-source-${index}`; // Generate a unique source ID
+  
+          const geojson = {
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: coordinates,
+            },
+            properties: {}, // You can add properties here if needed
+          };
+  
+          // Add the polyline to the map as a GeoJSON source
+          map.addSource(sourceId, {
+            type: 'geojson',
+            data: geojson,
+          });
+  
+          // Add a layer for the polyline
+          map.addLayer({
+            id: `polyline-layer-${index}`, // Generate a unique layer ID
+            type: 'line',
+            source: sourceId, // Use the generated source ID
+            layout: {},
+            paint: {
+              'line-color': polylineOptions.color,
+              'line-width': polylineOptions.weight,
+              'line-opacity': polylineOptions.opacity,
+            },
+          });
         });
-
+      }, 1000);
     },
-};
-</script>
-
-<style>
-@import url('https://api.mapbox.com/mapbox.js/v3.3.1/mapbox.css');
-
-.mapboxgl-control-container {
+  };
+  </script>
+  
+  <style>
+  @import url('https://api.mapbox.com/mapbox.js/v3.3.1/mapbox.css');
+  
+  .mapboxgl-control-container {
     display: none !important;
-}
-
-.map-container {
+  }
+  
+  .map-container {
     width: 100%;
     height: 100%;
-}
-
-#map {
+  }
+  
+  #map {
     width: 100%;
     height: 100%;
-}
-</style>
+  }
+  </style>
+  

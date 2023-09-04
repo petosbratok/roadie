@@ -84,7 +84,10 @@
           </div>
         </div>
         <div class="cell map">
-          <MapComponent></MapComponent>
+          <MapComponent
+            v-if="resultReady"
+            :data="result.all.all.polylineData"
+          ></MapComponent>
         </div>
         <div class="cell top-speed">
           <div>
@@ -189,6 +192,7 @@
   import SportsSelectorComponent from './SportsSelectorComponent.vue'
   import ChartComponent from './ChartComponent.vue'
   import MapComponent from './MapComponent.vue'
+  // import { ref, onMounted, reactive, toRaw } from 'vue';
   import { ref, onMounted, reactive } from 'vue';
 
   export default {
@@ -259,6 +263,18 @@
         }
 
         async function analyze(all_data) {
+          result['all'] = {
+            'all': { 
+              'polylineData': [],
+              fastestActivity: { distance: 0, speed: 0 },
+              longestActivity: { distance: 0, speed: 0 },
+              totalDistance: 0,
+              totalHours: 0,
+              totalSessions: 0,
+              sessions: []
+             }
+          }
+
           for (const year in all_data) {
             result[year] = {};
             const yearData = all_data[year];
@@ -289,9 +305,11 @@
               for (const post of activities) {
                 const distance = parseFloat((post.distance / 1000).toFixed(1));
                 const speed = parseFloat((post.average_speed * 3.6).toFixed(1));
-                
+
                 const date = new Date(post.start_date_local);
                 const year = date.getFullYear();
+
+                result.all.all.polylineData.push(post.map.summary_polyline);
 
                 const formattedDate = date.toLocaleString('en', {
                   month: 'short',
@@ -302,7 +320,7 @@
                 result[year][sportType].sessions.push({
                   speed: speed,
                   distance: distance,
-                  date: formattedDate
+                  date: formattedDate,
                 })
 
                 result[year]['all'].sessions.push({
@@ -362,8 +380,7 @@
             }
           }
 
-          result['all'] = {}
-          const activities = ['ride', 'swim', 'run', 'all'];
+          const activities = ['ride', 'swim', 'run'];
 
           for (const activity of activities) {
             result['all'][activity] = {
@@ -529,6 +546,7 @@
 .charts { 
     grid-area: charts;
     background: #B8B8AA !important;
+    width: calc(50vw - 18px);
   }
 
   .chart-block:first-child {
