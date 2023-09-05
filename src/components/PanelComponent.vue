@@ -215,8 +215,8 @@
 
         async function getAndAnalyzeActivities(res) {
           const allActivitiesData = [];
-          // const requestSizes = [200, 200, 200];
-          const requestSizes = [100]
+          const requestSizes = [200, 200, 200];
+          // const requestSizes = [100]
           const totalPages = requestSizes.length;
           const totalRequests = totalPages;
           let successfulRequests = 0;
@@ -563,7 +563,8 @@
 .map { 
   grid-area: map;
   padding: 0 !important;
-  overflow: hidden;
+  background-color: rgba(46,69,92,255) !important;
+  width: calc(50vw - 18px);
 }
 
 .speed { 
