@@ -13,7 +13,6 @@
 <script>
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import turf from 'turf';
 import { ref } from 'vue'
 
 export default {
@@ -21,7 +20,7 @@ export default {
   props: ['data'],
   data() {
     return {
-      isMinimized: true,
+      isMinimized: false,
       map: null,
       animationOn: ref(false),
     };
@@ -42,69 +41,88 @@ export default {
     },
   },
   async mounted() {
-    const decoder = require('@mapbox/polyline');
-    const mapbox_token =
-      'pk.eyJ1IjoicGV0b3NicmF0b2siLCJhIjoiY2wxdWtnNjM5MDB2ZzNkbDNzNzV2MThnbCJ9.--UWf-pthCKugxhxF4kmbQ';
+  const decoder = require('@mapbox/polyline');
+  const mapbox_token =
+    'pk.eyJ1IjoicGV0b3NicmF0b2siLCJhIjoiY2wxdWtnNjM5MDB2ZzNkbDNzNzV2MThnbCJ9.--UWf-pthCKugxhxF4kmbQ';
 
-    mapboxgl.accessToken = mapbox_token;
+  mapboxgl.accessToken = mapbox_token;
 
-    const mapboxStyle = 'mapbox://styles/petosbratok/cl1ukjde8000514ltcfj80eto';
+  const mapboxStyle = 'mapbox://styles/petosbratok/cl1ukjde8000514ltcfj80eto';
 
-    this.map = new mapboxgl.Map({
-      container: 'map',
-      style: mapboxStyle,
-      center: [30.45, 59.87],
-      pitch: 35,
-      bearing: -15,
-      zoom: 10,
-    });
+  this.map = new mapboxgl.Map({
+    container: 'map',
+    style: mapboxStyle,
+    center: [30.45, 59.87],
+    pitch: 35,
+    bearing: -15,
+    zoom: 10,
+  });
 
-    const polylineOptions = {
-      color: '#BDD9BF',
-      weight: 3,
-      opacity: 0.5,
-    };
+  const polylineOptions = {
+    color: '#BDD9BF',
+    weight: 3,
+    opacity: 0.25,
+  };
 
-    setTimeout(() => {
-      this.data.forEach((encodedPolyline, index) => {
+  this.map.on('load', () => {
+    let dataIndex = 0;
+
+    const addNextGroupedSource = () => {
+      const groupedFeatures = [];
+
+      for (let i = 0; i < 40 && dataIndex < this.data.length; i++) {
+        const encodedPolyline = this.data[dataIndex];
         const coordinates = decoder.decode(encodedPolyline).map(coord => [coord[1], coord[0]]);
-        const sourceId = `polyline-source-${index}`;
 
-        const geojson = {
-          type: 'FeatureCollection',
-          features: [
-            {
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: coordinates,
-              },
-              properties: null,
-            },
-          ],
+        const feature = {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: coordinates,
+          },
+          properties: {
+            id: dataIndex,
+          },
         };
 
-        const simplified = turf.simplify(geojson, 0.0001, true);
+        groupedFeatures.push(feature);
+        dataIndex++;
+      }
+
+      if (groupedFeatures.length > 0) {
+        const sourceId = `polyline-source-${dataIndex}`;
+        const layerId = `polyline-layer-${dataIndex}`;
 
         this.map.addSource(sourceId, {
           type: 'geojson',
-          data: simplified,
+          data: {
+            type: 'FeatureCollection',
+            features: groupedFeatures,
+          },
         });
 
         this.map.addLayer({
-          id: `polyline-layer-${index}`,
+          id: layerId,
           type: 'line',
           source: sourceId,
-          layout: {},
           paint: {
             'line-color': polylineOptions.color,
             'line-width': polylineOptions.weight,
             'line-opacity': polylineOptions.opacity,
           },
         });
-      });
-    }, 1000);
-  },
+
+        // Continue adding sources until there is no more data
+        if (dataIndex < this.data.length) {
+          addNextGroupedSource();
+        }
+      }
+    };
+
+    // Start adding sources
+    addNextGroupedSource();
+  });
+},
 };
 </script>
 
