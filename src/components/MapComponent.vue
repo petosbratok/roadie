@@ -2,11 +2,15 @@
   <div :class="['map-container', isMinimized ? '' : 'expanded']">
     <div 
       id="map"
-      :class="aminationOn ? 'hidden' : ''"
     ></div>
   </div>
-  <button :class="['toggle-button', isMinimized ? '' : 'active']" @click="toggleMinimized">
-    <span>+</span>
+  <button 
+    :class="['toggle-button', isMinimized ? '' : 'active']" 
+    @click="toggleMinimized"
+  >
+    <span>
+      <font-awesome-icon :icon="['fas', 'plus']" />
+    </span>
   </button>
 </template>
 
@@ -20,7 +24,7 @@ export default {
   props: ['data'],
   data() {
     return {
-      isMinimized: false,
+      isMinimized: true,
       map: null,
       animationOn: ref(false),
     };
@@ -52,16 +56,17 @@ export default {
   this.map = new mapboxgl.Map({
     container: 'map',
     style: mapboxStyle,
-    center: [30.45, 59.87],
+    center: [30.41, 59.88],
     pitch: 35,
     bearing: -15,
-    zoom: 10,
+    zoom: 10.5,
+    antialias: true,
   });
 
   const polylineOptions = {
     color: '#BDD9BF',
     weight: 3,
-    opacity: 0.25,
+    opacity: 0.35,
   };
 
   this.map.on('load', () => {
@@ -70,7 +75,7 @@ export default {
     const addNextGroupedSource = () => {
       const groupedFeatures = [];
 
-      for (let i = 0; i < 40 && dataIndex < this.data.length; i++) {
+      for (let i = 0; i < 50 && dataIndex < this.data.length; i++) {
         const encodedPolyline = this.data[dataIndex];
         const coordinates = decoder.decode(encodedPolyline).map(coord => [coord[1], coord[0]]);
 
@@ -121,6 +126,38 @@ export default {
 
     // Start adding sources
     addNextGroupedSource();
+
+    this.map.addLayer({
+      'id': 'add-3d-buildings',
+      'source': 'composite',
+      'source-layer': 'building',
+      'filter': ['==', 'extrude', 'true'],
+      'type': 'fill-extrusion',
+      'minzoom': 12,
+      'paint': {
+        'fill-extrusion-color': '#aaa',
+        'fill-extrusion-height': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          12,
+          0,
+          12.05,
+          ['get', 'height']
+        ],
+        'fill-extrusion-base': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          12,
+          0,
+          12.05,
+          ['get', 'min_height']
+        ],
+        'fill-extrusion-opacity': 0.6
+      }
+      },
+    );
   });
 },
 };
@@ -140,6 +177,7 @@ export default {
   overflow: hidden;
   border-radius: 16px;
   z-index: 3;
+  background: var(--dark-blue);
 }
 
 .expanded {
@@ -157,7 +195,7 @@ export default {
 }
 
 .toggle-button {
-  font-size: 2em;
+  font-size: 1.25em;
   position: absolute;
   top: 204px;
   right: 20px; 
@@ -171,6 +209,7 @@ export default {
   border-radius: 8px;
   z-index: 4;
   transition-duration: 450ms;
+  padding-top: 2px;
 }
 
 .toggle-button span {
@@ -187,9 +226,5 @@ export default {
 
 #map {
   transition-duration: .1s;
-}
-
-.hidden {
-  opacity: 0;
 }
 </style>
